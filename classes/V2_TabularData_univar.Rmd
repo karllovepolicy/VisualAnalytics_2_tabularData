@@ -116,7 +116,7 @@ table(eduwa$LocaleType,exclude = 'nothing')
 ```
 
 ```{r freqTab_rel, eval=FALSE}
-# relative values
+# relative values, proportion . the input of the prop is a table
 absoluteT=table(eduwa$LocaleType,exclude = 'nothing')
 prop.table(absoluteT)
 ```
@@ -268,7 +268,7 @@ Most people tend to use pie charts with categorical data, but this **should not*
 barplot(ToPlot,
          col = paletteHere,
          main=titleText,
-         sub=sourceText)
+         sub=sourceText) # the less ink, the better
 ```
 
 We saved some space as no legend was needed (the less **ink** the better visual). Speaking of saving, we can get rid of the colors (they were needed to differentiate the slices). 
@@ -304,7 +304,7 @@ location=barplot(ToPlot,
 #annotating
 text(x=location,y=ToPlot,labels=plotLabels,
      pos = 1,# if pos=3, text will be on top of bar
-     cex = 0.8) 
+     cex = 0.9) #cex is the set of the font size
 
 ```
 
@@ -355,9 +355,10 @@ location=barplot(ToPlot,
          border=NA,
          main=titleText,
          sub=sourceText,
-         cex.names = 0.7, #shrink category names
+         cex.names = 0.7, #shrink category names, dispension, below 1 shrink, above 1 enlarge
          xlim=c(0,50), 
          xlab = '(in %)', 
+         ylab = 'lala',
          horiz = T)
 
 #annotating
@@ -441,7 +442,7 @@ title(sub=sourceText, adj=0,cex.sub=0.7,
 
 # reference line
 abline(v=25,#position vertical
-       lty=3,#type
+       lty=2,#type
        lwd=3)#width
 
 ```
@@ -459,7 +460,7 @@ location=barplot(ToPlot,
          xlab = '(in %)',
          cex.names=0.6,
          cex.lab=0.6,
-         las=2,
+         las=3,
          horiz = T,
          xaxt="n") # no x-axis, so I customize it below...
 
@@ -533,7 +534,7 @@ plot2
 * Add the reference lines:
 
 ```{r refl_gg, eval=FALSE}
-plot3 = plot2 + geom_hline(yintercept = 25, #where
+plot3 = plot2 + geom_hline(yintercept = 20, #where
                            linetype="dashed", 
                            size=1.5, #thickness
                            alpha=0.5) #transparency

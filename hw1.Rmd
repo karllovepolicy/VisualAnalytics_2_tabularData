@@ -1,0 +1,249 @@
+---
+title: "Hw1"
+author: "Haotian Bu"
+date: "2019年1月16日"
+output: html_document
+---
+
+
+So far, we have used the _basic_ R capabilities for plotting. 
+
+There are alternative libraries, like **ggplot2**, that are also frequently used. However, it has a different approach, which allows to add layers that let you customize your plot. The classic approach for ggplot is:
+
+* Avoid missing values and prepare frequency table. We replaced the missing values (now they are 'Unknown'). Here, you need to transform the _table_ into a **data frame**:
+
+```{r ggplot1, eval=FALSE}
+
+tableFreq=as.data.frame(ToPlot)
+names(tableFreq)=c("locale","pct")
+#you have:
+tableFreq
+```
+
+
+* Call the library:
+
+```{r ggplot_call, warning=FALSE}
+library(ggplot2)
+```
+
+* Create the base _object_, which is not a plot, just informing the main variables:
+
+```{r ggplot_base, eval=FALSE}
+#base GGPLOT2 starts with a "base", telling WHAT VARIABLES TO PLOT
+base= ggplot(data = tableFreq, 
+             aes(x = locale,
+                 y = pct)) 
+base
+```
+
+* On top of the previous object, add the layer that produces the main plots (the next layers will add or customize elements in the plot):
+
+```{r bar_gg, eval=FALSE}
+plot1 = base + geom_bar(fill ="gray",
+                        stat = 'identity') # y is just what it is!
+plot1
+```
+
+* We can now pay attention to the titles:
+
+```{r title_gg, eval=FALSE}
+plot2 = plot1 + labs(title=titleText2,
+                     x =NULL, 
+                     y = NULL,
+                     caption = sourceText)
+plot2
+
+```
+
+* Add the reference lines:
+
+```{r refl_gg, eval=FALSE}
+plot3 = plot2 + geom_hline(yintercept = 25, #where
+                           linetype="dashed", 
+                           size=1.5, #thickness
+                           alpha=0.5) #transparency
+plot3
+```
+
+* Customize the axes:
+
+```{r units_gg, eval=FALSE}
+library(scales)
+
+# customize Y axis
+plot4 = plot3 + scale_y_continuous(breaks=c(0,10, 25,40,50),
+                                 limits = c(0, 50), # expand = c(0, 0),
+                                 labels=scales::unit_format(suffix = '%')) 
+plot4
+```
+
+* Less ink and title/subtitle positions:
+```{r title2_gg, eval=FALSE}
+plot5 = plot4 + theme(panel.background = element_rect(fill = "white",
+                                                    colour = "grey50"),
+                    plot.caption = element_text(hjust = 0), # default was 1
+                    plot.title = element_text(hjust = 0.5))
+plot5
+```
+
+* annotating the bars:
+
+```{r annot_gg, eval=FALSE}
+plot6 = plot5 + geom_text(aes(y = pct ,
+                            label = paste0(round(pct,2), '%')),
+                        vjust=1, # if flipping 'hjust'
+                        size = 3)
+# wanna flip the plot?
+plot6 #+ coord_flip()
+
+```
+
+
+Bar plots are the default option for categorical variables. In general, you see the distribution of the classification, which allows you to identify **concentration**. For that reason, ordering the bars by height can be helpful:
+
+```{r orderBars_base, eval=FALSE}
+###
+ToPlotOrd=sort(ToPlot)
+###
+
+par(mgp=c(1,0.5,0)) # distance label, tickText,tick
+location=barplot(ToPlotOrd,
+         col = paletteHereNew,
+         border=NA,
+         main=titleText2,
+         xlim=c(0,50), 
+         xlab = '(in %)',
+         horiz = T,
+         cex.names = 0.7,
+         cex.lab=0.6,
+         xaxt="n") # no x-axis, so I customize it below...
+
+text(x=ToPlotOrd,y=location,labels=plotLabels,pos = 2,cex = 0.7) 
+title(sub=sourceText, adj=0,cex.sub=0.7,line = 3) 
+
+# reference line
+abline(v=25,lty=3,lwd=3)
+
+# customizong tick values
+xtick<-c(0,10,25,40,50)
+axis(side=1, at=xtick, labels = xtick,cex.axis=0.8)
+
+```
+
+The plot above simply change the order of the _table_. If you want to do the same with _ggplot_ you should try the command:
+
+```{r orderFor_gg, eval=FALSE}
+
+ggplot(data = tableFreqOrd, aes(x = reorder(locale, pct), y = pct)) +
+  geom_bar(fill ="gray", stat = 'identity') +
+  labs(title=titleText2,x =NULL, y = NULL, caption = sourceText) +
+  geom_hline(yintercept = 20,linetype="dashed", size=1.5, alpha=0.5) +
+  scale_y_continuous(breaks=c(0,10, 25,40,50),limits = c(0, 50), 
+                     labels=scales::unit_format(suffix = '%')) +
+  theme(panel.background = element_rect(fill = "white",colour = "grey50"),
+        plot.caption = element_text(hjust = 0),
+        plot.title = element_text(hjust = 0.5)) +
+  geom_text(aes(y = pct ,label = paste0(round(pct,2), '%')),
+            hjust=1, size = 3) +
+  coord_flip() +
+  theme_bw()
+  
+
+```
+
+
+<span style="color:red"> Exercise:<br>Use ggplot to show a bar plot ordered by share size.</span>
+
+
+
+We could use our reference line to show gaps or differences. In this case, the **Lollipop** plot may be useful. This one is just a replacement for a bar plot:
+
+```{r lolli_gg, eval=FALSE}
+base = ggplot(tableFreq, aes(x=locale,pct)) 
+lolliplot1=base + geom_segment(aes(y = 0, 
+                                   x = locale, 
+                                   yend = pct, 
+                                   xend = locale), color = "grey50") 
+lolliplot1 + geom_point()
+```
+
+And, if you order the data frame:
+```{r lolli_ord, eval=FALSE}
+tableFreq[order(tableFreq$pct),]
+```
+
+You can get:
+```{r lolli_ord_gg, eval=FALSE}
+
+# reordering DF steps:
+tableFreqO=tableFreq[order(tableFreq$pct),]
+
+
+base = ggplot(tableFreqO, aes(locale,pct)) 
+lolliplot1=base + geom_segment(aes(y = 0, 
+                                   x = locale, 
+                                   yend = pct, 
+                                   xend = locale), color = "gray") 
+lolliplot2 = lolliplot1 + geom_point()
+lolliplot2 + scale_x_discrete(limits=tableFreqO$locale) # key element
+```
+
+And, what about changing the axis values so that we can identify the gaps:
+
+```{r lolli_axis_gg, eval=FALSE}
+# new variable
+tableFreqO$gap=tableFreqO$pct-25
+
+# plot the new variable
+base = ggplot(tableFreqO, aes(locale,gap)) 
+
+lolliplot1=base + geom_segment(aes(y = 0, 
+                                   x = locale, 
+                                   yend = gap, 
+                                   xend = locale), color = "gray") 
+lolliplot2 = lolliplot1 + geom_point()
+lolliplot2 + scale_x_discrete(limits=tableFreqO$locale) # key element
+
+```
+
+Maybe add some color:
+```{r lolli_gg_color, eval=FALSE}
+# a new column for color
+tableFreqO$PositiveGap=ifelse(tableFreqO$gap>0,T,F)
+
+# add new aesthetics 'color'
+base = ggplot(tableFreqO, aes(locale,gap,
+                              color=PositiveGap)) #change
+lolliplot1=base + geom_segment(aes(y = 0, 
+                                   x = locale, 
+                                   yend = gap, 
+                                   xend = locale), color = "gray") 
+lolliplot2 = lolliplot1 + geom_point()
+lolliplot2 + scale_x_discrete(limits=tableFreqO$locale) # key element
+```
+
+Maybe add some extra info:
+```{r lolli_annot_gg, eval=FALSE}
+# a new column for color
+tableFreqO$PositiveGap=ifelse(tableFreqO$gap>0,T,F)
+
+base = ggplot(tableFreqO, aes(locale,gap,color=PositiveGap,
+                              label = round(gap,3))) #  change
+lolliplot1=base + geom_segment(aes(y = 0, 
+                                   x = locale, 
+                                   yend = gap, 
+                                   xend = locale), color = "gray") 
+lolliplot2=lolliplot1 + geom_point() 
+lolliplot3= lolliplot2 + scale_x_discrete(limits=tableFreqO$locale) 
+# annotating and moving the text on the horizontal
+lolliplot3 + geom_text(nudge_x=0.3) 
+
+```
+
+You can avoid the overlaping symbols in the legend by using:
+```{r nudge_gg, eval=FALSE}
+lolliplot3 + geom_text(nudge_x=0.3,show.legend = FALSE) 
+```
+
+<span style="color:red"> Exercise:<br>Complete adding the elements missing in the last plot. </span>
