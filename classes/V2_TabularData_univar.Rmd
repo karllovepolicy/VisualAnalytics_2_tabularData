@@ -609,22 +609,37 @@ axis(side=1, at=xtick, labels = xtick,cex.axis=0.8)
 The plot above simply change the order of the _table_. If you want to do the same with _ggplot_ you should try the command:
 
 ```{r orderFor_gg, eval=FALSE}
-tableFreq[order(-tableFreq$pct),]
+orderBase = ggplot(data = tableFreq, aes(x = reorder(locale, pct), y = pct))
+plot6 = orderBase +  geom_bar(fill ="gray", stat = 'identity') +
+  labs(title=titleText2,x =NULL, y = NULL, caption = sourceText) +
+  geom_hline(yintercept = 20,linetype="dashed", size=1.5, alpha=0.5) +
+  scale_y_continuous(breaks=c(0,10, 25,40,50),limits = c(0, 50), 
+                     labels=scales::unit_format(suffix = '%')) +
+  theme(panel.background = element_rect(fill = "white",colour = "grey50"),
+        plot.caption = element_text(hjust = 0),
+        plot.title = element_text(hjust = 0.5)) +
+  geom_text(aes(y = pct ,label = paste0(round(pct,2), '%')),
+            hjust=1, size = 3) +
+  coord_flip() +
+  theme_bw()
+
+plot6
 ```
 
 
-<span style="color:red"> Exercise:<br>Use ggplot to show a bar plot ordered by share size.</span>
 
+<span style="color:red"> Exercise:<br>Use ggplot to show a bar plot ordered by share size.</span>
 
 
 We could use our reference line to show gaps or differences. In this case, the **Lollipop** plot may be useful. This one is just a replacement for a bar plot:
 
 ```{r lolli_gg, eval=FALSE}
 base = ggplot(tableFreq, aes(x=locale,pct)) 
-lolliplot1=base + geom_segment(aes(y = 0, 
+lolliplot1=base + geom_segment(aes(y = 0,  
                                    x = locale, 
                                    yend = pct, 
                                    xend = locale), color = "grey50") 
+lolliplot1
 lolliplot1 + geom_point()
 ```
 
@@ -646,13 +661,14 @@ lolliplot1=base + geom_segment(aes(y = 0,
                                    yend = pct, 
                                    xend = locale), color = "gray") 
 lolliplot2 = lolliplot1 + geom_point()
+
 lolliplot2 + scale_x_discrete(limits=tableFreqO$locale) # key element
 ```
 
 And, what about changing the axis values so that we can identify the gaps:
 
 ```{r lolli_axis_gg, eval=FALSE}
-# new variable
+# generate new variable
 tableFreqO$gap=tableFreqO$pct-25
 
 # plot the new variable
@@ -669,12 +685,12 @@ lolliplot2 + scale_x_discrete(limits=tableFreqO$locale) # key element
 
 Maybe add some color:
 ```{r lolli_gg_color, eval=FALSE}
-# a new column for color
+# a new column for color, 2 values for 2 groups 
 tableFreqO$PositiveGap=ifelse(tableFreqO$gap>0,T,F)
 
 # add new aesthetics 'color'
 base = ggplot(tableFreqO, aes(locale,gap,
-                              color=PositiveGap)) #change
+                              color = PositiveGap )) #change
 lolliplot1=base + geom_segment(aes(y = 0, 
                                    x = locale, 
                                    yend = gap, 
@@ -708,6 +724,17 @@ lolliplot3 + geom_text(nudge_x=0.3,show.legend = FALSE)
 
 <span style="color:red"> Exercise:<br>Complete adding the elements missing in the last plot. </span>
 
+```{r EXercise2}
+
+lolliplot4 = lolliplot3 + geom_text(nudge_x=0.3,show.legend = FALSE) +
+  labs(title=titleText2,x =NULL, y = NULL, caption = sourceText) +
+  theme(panel.background = element_rect(fill = "white",colour = "grey50"),
+        plot.caption = element_text(hjust = 0),
+        plot.title = element_text(hjust = 0.5)) +
+  geom_text(nudge_x=0.3,show.legend = FALSE) +
+  theme_bw()
+lolliplot4
+```
 
 
 
@@ -719,16 +746,21 @@ lolliplot3 + geom_text(nudge_x=0.3,show.legend = FALSE)
 #### <span style="color:blue"> 2. Visualization for ordinal scales</span>
 
 For this section, we will use the variable that tells us the highest grade offered in a school. A simple exploration gives:
+```{r}
+table(eduwa$High.Grade)
+```
+
 
 ```{r ordinalTable, eval=FALSE}
-table(eduwa$High.Grade,exclude = 'nothing')
+table(eduwa$High.Grade,exclude = 'nothing') # what's the meaning of exclude?
 ```
 
 Being a categorical variable, the default option is again the bar plot. So let's prepare the frequency table as a data frame:
 
 ```{r tableAsDF, eval=FALSE}
-frqTabO=as.data.frame(prop.table(table(eduwa$High.Grade)))
-names(frqTabO)=c('grade','pct')
+frqTabO=as.data.frame(prop.table(table(eduwa$High.Grade))) #ggplot deals with dataframe, transfer tables into dataframes
+frqTabO
+names(frqTabO)=c('grade','pct') # give names to variables
 frqTabO
 ```
 
@@ -737,10 +769,11 @@ Now, we can use ggplot:
 ```{r ordTable_gg, eval=FALSE}
 
 base = ggplot(frqTabO,aes(x=grade,y=pct))
-base + geom_bar(stat = 'identity') 
+base + geom_bar(stat = 'identity') #identity means just use the value of the y
 ```
 
 
+@
 The x-values in this variable have **order**. That is, there is an increasing level in the values. Whenever we have an ordering, besides *concentration* we can visualize **symmetry**: if there is bias towards lower or higher values. 
 
 Bar plots help you see concentration and symmetry, but we have an alternative way to clearly detect symmetry, via **boxplots**:
@@ -750,12 +783,14 @@ Bar plots help you see concentration and symmetry, but we have an alternative wa
 
 # as.numeric produces turns levels of the factor into numbers
 box1 = ggplot(eduwa, aes(y=as.numeric(High.Grade))) 
-box1 = box1 + geom_boxplot() + coord_flip() # to show it horizontally
+box1 = box1 + geom_boxplot() + coord_flip() # to show it horizontally, y-axis has no meaning
+box1 = box1 + theme(panel.grid = element_blank(),,
+                    axis.text.y = element_blank())
 
 box1
 ```
 
-You have symmetry when the distance of those whiskers to the  box is the same, and when the thick line is in the middle of the box. You can see that the values show a negative asymmetry (tail to the left).
+You have symmetry when the distance of those whiskers to the box is the same, and when the thick line is in the middle of the box. You can see that the values show a negative asymmetry (tail to the left).
 
 Box plots expect a numeric value as an input, but we have an ordered categorical, so we used the _as.numeric()_ function. However, that eliminated the levels we saw in the previous bar plot; we can put the levels back in our plot:
 
@@ -798,6 +833,18 @@ freq(eduwa$High.Grade,style = 'rmarkdown')
 <span style="color:red"> Exercise:<br> Make sure our box plot follows the same design approach and include all the elements as in the bar plot for nominal data.
 </span>
 
+```{r boxplot_gg, eval=FALSE}
+
+box1 = ggplot(eduwa, aes(y=as.numeric(High.Grade))) 
+
+ordLabels= levels(eduwa$High.Grade)
+
+box2 = box1 + geom_boxplot() + 
+       coord_flip() +
+  scale_y_continuous(labels=ordLabels,breaks=1:15)# to show it horizontally
+
+box2
+```
 
 [Go to table of contents.](#part1)
 
@@ -835,7 +882,7 @@ The bar plot produces a bar for each unique value in the data, counting how many
 
 ```{r baseHistogram, eval=FALSE}
 eduwa3=eduwa[complete.cases(eduwa$Reduced.Lunch),]
-dataHist=hist(eduwa3$Reduced.Lunch) #saving info in dataHist
+dataHist=hist(eduwa3$Reduced.Lunch) #saving info in dataHist, the base R
 ```
 
 The width of each **bin** (bar) represents an interval of values, while its height the frequency. The histogram shows an asymmetric shape, where the bin with lowest values of the variable (between 0 and 20) are the most common (above 1000).
@@ -851,7 +898,7 @@ h1
 Notice that you do not get the same plot. Let's see the info from the basic function:
 
 ```{r infoHIST_base, eval=FALSE}
-dataHist
+dataHist # how baseR produce the histogram
 ```
 
 And now see the info that was used in ggplot:
@@ -868,14 +915,14 @@ Below, you can see a version where both plots are the same:
 ```{r GGLikeBase,eval=FALSE,fig.height=7}
 #ggplot
 base= ggplot(eduwa3,aes(x = Reduced.Lunch))  
-h1= base + geom_histogram(binwidth = 20,boundary=0) #changing width
-h1= h1 + stat_bin(binwidth = 20, aes(label=..count..), 
-                  geom = "text",boundary = 0,vjust=-0.5)
+h1= base + geom_histogram(binwidth = 20, boundary=0) #changing width
+h1= h1 + stat_bin(binwidth = 20, aes(label=..count..), #add the text, accompany with the histogram, same width, same boundry
+                  geom = "text",boundary = 0,vjust= -0.5) 
 h1
 ```
 
 ```{r baseLikeGG, eval=FALSE,fig.height=7}
-# base
+# base, use base to get the first impression, and then decide whehter to make it art
 hist(eduwa3$Reduced.Lunch,labels = T,xlab="Reduced Lunch")
 ```
 
@@ -889,7 +936,7 @@ axis(side=1, at=dataHist$breaks) # showing axis labels better
 As mentioned before, we are plotting intervals, so the accompanying table can be built. For that, we first create the intervals into another variable:
 
 ```{r makeIntervals, eval=FALSE}
-eduwa3$redLunchOrd=cut(eduwa3$Reduced.Lunch,
+eduwa3$redLunchOrd=cut(eduwa3$Reduced.Lunch, # make a new data structure here
                        breaks = dataHist$breaks,
                        include.lowest = T,
                        ordered_result = T)
@@ -917,7 +964,7 @@ A simplistic idea of measurement tells you the times a particular unit is presen
 Let's analyze the variable _Student.Teacher.Ratio_, but organized by county:
 
 ```{r tapply,  eval=FALSE}
-# tapply(variable,group,functionToApply)
+# tapply(variable,group,functionToApply), work at county level, unit analysis
 tapply(eduwa$Student.Teacher.Ratio, eduwa$County, mean)
 
 ```
@@ -926,14 +973,14 @@ Above, I tried to compute the mean for each county, but the function _mean()_ ou
 
 ```{r removeMissing,  eval=FALSE}
 # strategy 1: remove missing before computing function: na.rm=T
-tapply(eduwa$Student.Teacher.Ratio, eduwa$County, mean,na.rm=T)
+tapply(eduwa$Student.Teacher.Ratio, eduwa$County, mean, na.rm=T)
 
 ```
 
 Of course, you can clean first:
 
 ```{r removeMissing2, eval=FALSE}
-# strategy 2: 
+# strategy 2: change the original data set
 eduwa4=eduwa[complete.cases(eduwa$Student.Teacher.Ratio),]
 
 tapply(eduwa4$Student.Teacher.Ratio, 

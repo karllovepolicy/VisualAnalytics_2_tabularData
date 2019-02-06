@@ -164,26 +164,25 @@ meanValues=tapply(eduwa4$Student.Teacher.Ratio,
                   mean)
 TableMean=as.data.frame(meanValues)
 
-TitleText5 <- "Mean value of Student-Teacher Ratio" 
+TitleText5_1 <- "Mean value of Student-Teacher Ratio" 
 
 ggplot(TableMean,aes(x = TableMean$meanValues)) + 
-  geom_histogram(binwidth = 2,boundary=0) +#changing width
+  geom_histogram(aes(fill=TableMean$meanValues), binwidth = 2,boundary=0) +#changing width
   stat_bin(binwidth = 2, aes(label=..count..),
            geom = "text",boundary = 0,vjust=-0.5) +
-  labs(title=TitleText5,x =NULL, y = NULL, caption = sourceText) +
+  labs(title=TitleText5_1,x =NULL, y = NULL, caption = sourceText) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r Exercise5_DensityPlot}
 
-
-TitleText5 <- "Density plot of Student-Teacher Ratio"
+TitleText5_2 <- "Density plot of Student-Teacher Ratio"
 
 ggplot(TableMean, ) +
   stat_density(aes(x = meanValues), adjust = 1, geom = "line", kernel = "gaussian") +
   geom_vline(xintercept = mean(meanValues), linetype="dashed", size=1.5, col = 'blue', alpha=0.5) +
   geom_vline(xintercept = median(meanValues),lty="dashed",lwd=1.5,col='red') +#median  
-  labs(title=TitleText5, x =NULL, y = NULL, caption = sourceText) +
+  labs(title=TitleText5_2, x =NULL, y = NULL, caption = sourceText) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
